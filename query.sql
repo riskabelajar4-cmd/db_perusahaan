@@ -2,11 +2,11 @@
 CREATE DATABASE db_perusahaan;
 
 --mengguanakan Database
-USE db_perusahaan
+USE db_perusahaan;
 
 --membuat table karyawan
 CREATE TABLE karyawan (
-    id INT AUTO_INCREMENT PRIMARY_KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nama VARCHAR(100) NOT NULL,
     divisi VARCHAR(100) NOT NULL,
     jam_kerja_sepekan INT NOT NULL,
