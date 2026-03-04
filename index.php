@@ -1,21 +1,12 @@
 <?php
-// index.php - Sistem Manajemen Karyawan dengan Fitur Pencarian
-// =====================================================
-// MENANGKAP DATA PENCARIAN (GET) DENGAM AMAN
-// =====================================================
+//Fitur Pencarian
+include 'koneksi.php'; // Panggil koneksi database
+
+// MENANGKAP DATA PENCARIAN (GET) DENGAN AMAN
 $keyword = '';
 if (isset($_GET['keyword'])) {
     $keyword = trim($_GET['keyword']); // Simpan keyword pencarian dan bersihkan spasi
 }
-
-// Data dummy karyawan
-$karyawan = [
-    ["id" => 1, "nama" => "ROIF", "divisi" => "IT", "jam_kerja" => 45, "gaji" => 5000000],
-    ["id" => 2, "nama" => "PUTRI", "divisi" => "HRD", "jam_kerja" => 38, "gaji" => 4500000],
-    ["id" => 3, "nama" => "MAYA", "divisi" => "Marketing", "jam_kerja" => 42, "gaji" => 4800000],
-    ["id" => 4, "nama" => "WIDYA", "divisi" => "Finance", "jam_kerja" => 40, "gaji" => 4700000],
-    ["id" => 5, "nama" => "RISMA", "divisi" => "IT", "jam_kerja" => 50, "gaji" => 5200000]
-];
 ?>
 
 <!DOCTYPE html>
@@ -43,7 +34,7 @@ $karyawan = [
             padding-bottom: 10px;
         }
         
-        /* FORM PENCARIAN */
+        /* FORM PENCARIAN*/
         .search-form {
             background-color: #f8f9fa;
             padding: 20px;
@@ -142,9 +133,8 @@ $karyawan = [
             font-weight: bold;
         }
         
-        /* ===================================================== */
-        /* NOTIFIKASI DATA TIDAK DITEMUKAN - YANG CANTIK */
-        /* ===================================================== */
+        
+        /* NOTIFIKASI DATA TIDAK DITEMUKAN */
         .not-found {
             text-align: center;
             padding: 50px 20px;
@@ -216,11 +206,28 @@ $karyawan = [
         .search-info strong {
             color: #FF0095;
         }
+        
+        /* Alert sukses */
+        .alert-success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Sistem Manajemen Karyawan</h2>
+
+        <!-- Tampilkan notifikasi jika ada -->
+        <?php if (isset($_GET['status']) && $_GET['status'] == 'success'): ?>
+            <div class="alert-success">
+                <strong>✅ Berhasil!</strong> Data karyawan baru telah ditambahkan.
+            </div>
+        <?php endif; ?>
 
         <!-- Tombol Tambah Data -->
         <a href="tambah_data.php" class="btn-tambah">+ Tambah Data Baru</a>
@@ -255,71 +262,57 @@ $karyawan = [
             </tr>
 
             <?php
-            // =====================================================
-            // LOGIKA PENCARIAN YANG AMAN (TIDAK ERROR FATAL)
-            // =====================================================
+            // LOGIKA PENCARIAN DAN TAMPIL DATA DARI DATABASE
+            if (!empty($keyword)) {
+                // Gunakan prepared statement untuk keamanan dari SQL Injection
+                $query = "SELECT * FROM karyawan WHERE nama LIKE ? OR divisi LIKE ? ORDER BY id ASC";
+                $stmt = mysqli_prepare($koneksi, $query);
+                $search_term = "%" . $keyword . "%";
+                mysqli_stmt_bind_param($stmt, "ss", $search_term, $search_term);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+            } else {
+                // Tampilkan semua data jika tidak ada pencarian, diurutkan dari ID terkecil
+                $query = "SELECT * FROM karyawan ORDER BY id ASC";
+                $result = mysqli_query($koneksi, $query);
+            }
             
             // Flag untuk mengecek apakah ada data yang cocok
             $data_ditemukan = false;
             $jumlah_tampil = 0;
             
-            // Looping data karyawan
-            foreach ($karyawan as $data) {
+            // Looping data karyawan dari database menggunakan mysqli_fetch_assoc
+            while ($data = mysqli_fetch_assoc($result)) {
+                $data_ditemukan = true;
+                $jumlah_tampil++;
                 
-                // Default tampilkan semua data jika tidak ada keyword
-                $tampilkan_data = true;
+                // Tentukan class untuk status
+                $status_class = '';
+                $status_text = '';
                 
-                // Jika ada keyword pencarian
-                if (!empty($keyword)) {
-                    
-                    // Ubah ke huruf kecil semua agar pencarian tidak case-sensitive
-                    $keyword_lower = strtolower($keyword);
-                    $nama_lower = strtolower($data['nama']);
-                    $divisi_lower = strtolower($data['divisi']);
-                    
-                    // Cek apakah keyword ada di nama ATAU divisi
-                    $cari_di_nama = strpos($nama_lower, $keyword_lower) !== false;
-                    $cari_di_divisi = strpos($divisi_lower, $keyword_lower) !== false;
-                    
-                    // Data ditampilkan hanya jika keyword ditemukan di nama ATAU divisi
-                    $tampilkan_data = ($cari_di_nama || $cari_di_divisi);
+                if ($data["jam_kerja_sepekan"] > 40) {
+                    $status_class = 'status-bonus';
+                    $status_text = 'Bonus Overtime';
+                } elseif ($data["jam_kerja_sepekan"] <= 0) {
+                    $status_class = 'status-gagal';
+                    $status_text = '⚠️ Tidak dapat gaji';
+                } else {
+                    $status_class = 'status-normal';
+                    $status_text = 'Jam Kerja Normal';
                 }
-                
-                // Jika data lolos filter, tampilkan
-                if ($tampilkan_data) {
-                    $data_ditemukan = true;
-                    $jumlah_tampil++;
-                    
-                    // Tentukan class untuk status
-                    $status_class = '';
-                    $status_text = '';
-                    
-                    if ($data["jam_kerja"] > 40) {
-                        $status_class = 'status-bonus';
-                        $status_text = 'Bonus Overtime';
-                    } elseif ($data["jam_kerja"] <= 0) {
-                        $status_class = 'status-gagal';
-                        $status_text = '⚠️ Tidak dapat gaji';
-                    } else {
-                        $status_class = 'status-normal';
-                        $status_text = 'Jam Kerja Normal';
-                    }
-                    ?>
-                    <tr>
-                        <td><?php echo $data["id"]; ?></td>
-                        <td><?php echo htmlspecialchars($data["nama"]); ?></td>
-                        <td><?php echo htmlspecialchars($data["divisi"]); ?></td>
-                        <td><?php echo $data["jam_kerja"]; ?> jam</td>
-                        <td>Rp <?php echo number_format($data["gaji"], 0, ',', '.'); ?></td>
-                        <td class="<?php echo $status_class; ?>"><?php echo $status_text; ?></td>
-                    </tr>
-                    <?php
-                }
+                ?>
+                <tr>
+                    <td><?php echo $data["id"]; ?></td>
+                    <td><?php echo htmlspecialchars($data["nama"]); ?></td>
+                    <td><?php echo htmlspecialchars($data["divisi"]); ?></td>
+                    <td><?php echo $data["jam_kerja_sepekan"]; ?> jam</td>
+                    <td>Rp <?php echo number_format($data["gaji_pokok"], 0, ',', '.'); ?></td>
+                    <td class="<?php echo $status_class; ?>"><?php echo $status_text; ?></td>
+                </tr>
+                <?php
             }
             
-            // =====================================================
-            // NOTIFIKASI JIKA TIDAK ADA DATA DITEMUKAN - YANG MUNCUL
-            // =====================================================
+            // NOTIFIKASI JIKA TIDAK ADA DATA DITEMUKAN
             if (!$data_ditemukan) {
                 // Tampilkan pesan dalam satu baris tabel
                 echo '<tr><td colspan="6">';
@@ -336,14 +329,19 @@ $karyawan = [
                 echo '</div>';
                 echo '</td></tr>';
             }
+            
+            // Hitung total data di database
+            $query_total = "SELECT COUNT(*) as total FROM karyawan";
+            $result_total = mysqli_query($koneksi, $query_total);
+            $total_karyawan = mysqli_fetch_assoc($result_total)['total'];
             ?>
         </table>
         
         <div style="margin-top: 20px; text-align: center; color: #666; font-size: 14px;">
             <?php if (!empty($keyword) && $data_ditemukan): ?>
-                <p>Menampilkan <strong><?php echo $jumlah_tampil; ?></strong> dari <strong><?php echo count($karyawan); ?></strong> karyawan</p>
+                <p>Menampilkan <strong><?php echo $jumlah_tampil; ?></strong> dari <strong><?php echo $total_karyawan; ?></strong> karyawan</p>
             <?php elseif (empty($keyword)): ?>
-                <p>Total Karyawan: <strong><?php echo count($karyawan); ?></strong> orang</p>
+                <p>Total Karyawan: <strong><?php echo $total_karyawan; ?></strong> orang</p>
             <?php endif; ?>
         </div>
     </div>
