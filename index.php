@@ -1,11 +1,11 @@
 <?php
-//Fitur Pencarian
+
 include 'koneksi.php'; // Panggil koneksi database
 
 // MENANGKAP DATA PENCARIAN (GET) DENGAN AMAN
 $keyword = '';
 if (isset($_GET['keyword'])) {
-    $keyword = trim($_GET['keyword']); // Simpan keyword pencarian dan bersihkan spasi
+    $keyword = trim($_GET['keyword']);
 }
 ?>
 
@@ -21,7 +21,7 @@ if (isset($_GET['keyword'])) {
             background-color: #f5f5f5;
         }
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -34,7 +34,7 @@ if (isset($_GET['keyword'])) {
             padding-bottom: 10px;
         }
         
-        /* FORM PENCARIAN*/
+        /* FORM PENCARIAN */
         .search-form {
             background-color: #f8f9fa;
             padding: 20px;
@@ -121,6 +121,34 @@ if (isset($_GET['keyword'])) {
             background-color: #d4007a;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        
+        /* Style untuk tombol Aksi */
+        .btn-edit {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .btn-edit:hover {
+            background-color: #218838;
+        }
+        .btn-hapus {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .btn-hapus:hover {
+            background-color: #c82333;
+        }
+        
         .status-bonus {
             color: green;
             font-weight: bold;
@@ -132,7 +160,6 @@ if (isset($_GET['keyword'])) {
             color: red;
             font-weight: bold;
         }
-        
         
         /* NOTIFIKASI DATA TIDAK DITEMUKAN */
         .not-found {
@@ -228,6 +255,18 @@ if (isset($_GET['keyword'])) {
                 <strong>✅ Berhasil!</strong> Data karyawan baru telah ditambahkan.
             </div>
         <?php endif; ?>
+        
+        <?php if (isset($_GET['status']) && $_GET['status'] == 'updated'): ?>
+            <div class="alert-success">
+                <strong>✅ Berhasil!</strong> Data karyawan telah diperbarui.
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['status']) && $_GET['status'] == 'deleted'): ?>
+            <div class="alert-success">
+                <strong>✅ Berhasil!</strong> Data karyawan telah dihapus.
+            </div>
+        <?php endif; ?>
 
         <!-- Tombol Tambah Data -->
         <a href="tambah_data.php" class="btn-tambah">+ Tambah Data Baru</a>
@@ -259,10 +298,11 @@ if (isset($_GET['keyword'])) {
                 <th>Jam Kerja</th>
                 <th>Gaji Pokok</th>
                 <th>Status</th>
+                <th>Aksi</th> 
             </tr>
 
             <?php
-            // LOGIKA PENCARIAN DAN TAMPIL DATA DARI DATABASE
+            
             if (!empty($keyword)) {
                 // Gunakan prepared statement untuk keamanan dari SQL Injection
                 $query = "SELECT * FROM karyawan WHERE nama LIKE ? OR divisi LIKE ? ORDER BY id ASC";
@@ -308,6 +348,11 @@ if (isset($_GET['keyword'])) {
                     <td><?php echo $data["jam_kerja_sepekan"]; ?> jam</td>
                     <td>Rp <?php echo number_format($data["gaji_pokok"], 0, ',', '.'); ?></td>
                     <td class="<?php echo $status_class; ?>"><?php echo $status_text; ?></td>
+                    <td>
+                        <!-- TOMBOL EDIT DAN HAPUS dengan ID dari database -->
+                        <a href="edit.php?id=<?php echo $data['id']; ?>" class="btn-edit">✏️ Edit</a>
+                        <a href="hapus.php?id=<?php echo $data['id']; ?>" class="btn-hapus" onclick="return confirm('Yakin ingin menghapus data <?php echo htmlspecialchars($data['nama']); ?>?')">🗑️ Hapus</a>
+                    </td>
                 </tr>
                 <?php
             }
@@ -315,7 +360,7 @@ if (isset($_GET['keyword'])) {
             // NOTIFIKASI JIKA TIDAK ADA DATA DITEMUKAN
             if (!$data_ditemukan) {
                 // Tampilkan pesan dalam satu baris tabel
-                echo '<tr><td colspan="6">';
+                echo '<tr><td colspan="7">'; // Ubah colspan jadi 7 karena ada kolom Aksi
                 echo '<div class="not-found">';
                 echo '<span class="icon">🔍</span>';
                 echo '<h3>Data Tidak Ditemukan</h3>';
