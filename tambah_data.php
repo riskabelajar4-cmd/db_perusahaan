@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// Proteksi halaman: Cek apakah user sudah login
+if (!isset($_SESSION['is_logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>

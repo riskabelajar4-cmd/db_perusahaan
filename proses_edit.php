@@ -1,5 +1,12 @@
 <?php
-// edit data karyawan
+session_start();
+
+// Proteksi halaman: Cek apakah user sudah login
+if (!isset($_SESSION['is_logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
+
 include 'koneksi.php'; // Panggil koneksi database
 
 // CEK APAKAH DATA DIKIRIM VIA POST

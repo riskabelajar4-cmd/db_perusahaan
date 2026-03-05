@@ -1,5 +1,12 @@
 <?php
-//Menambah data karyawan dengan mengisi ID kosong
+session_start();
+
+// Proteksi halaman: Cek apakah user sudah login
+if (!isset($_SESSION['is_logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
+
 include 'koneksi.php'; // Panggil koneksi database
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

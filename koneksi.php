@@ -1,15 +1,21 @@
 <?php
-// koneksi.php
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "db_perusahaan";
+// Konfigurasi database
+$host = 'localhost';  // atau 127.0.0.1
+$username = 'root';    // username MySQL default XAMPP
+$password = '';        // password MySQL default XAMPP (kosong)
+$database = 'db_perusahaan';
 
-$koneksi = new mysqli($host, $user, $password, $database);
+// Buat koneksi
+$koneksi = mysqli_connect($host, $username, $password, $database);
 
-if ($koneksi->connect_error) {
-    die("Koneksi gagal: " . $koneksi->connect_error);
+// Cek koneksi
+if (!$koneksi) {
+    die("Koneksi database gagal: " . mysqli_connect_error());
 }
 
-$koneksi->set_charset("utf8");
+// Set charset ke UTF-8
+mysqli_set_charset($koneksi, "utf8");
+
+// Jika ingin mengecek koneksi berhasil (hapus komentar untuk debugging)
+// echo "Koneksi berhasil";
 ?>

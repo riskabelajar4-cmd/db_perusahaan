@@ -1,4 +1,12 @@
 <?php
+// Halaman Utama dengan Proteksi Login
+session_start(); // Tambahkan session_start() di baris paling atas
+
+// Proteksi halaman: Cek apakah user sudah login
+if (!isset($_SESSION['is_logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
 
 include 'koneksi.php'; // Panggil koneksi database
 
@@ -28,10 +36,42 @@ if (isset($_GET['keyword'])) {
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
+        
+        /* HEADER dengan informasi user */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #FF0095;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .username {
+            font-weight: bold;
+            color: #FF0095;
+        }
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
         h2 {
             color: #333;
-            border-bottom: 2px solid #FF0095;
-            padding-bottom: 10px;
+            margin: 0;
         }
         
         /* FORM PENCARIAN */
@@ -243,11 +283,32 @@ if (isset($_GET['keyword'])) {
             margin-bottom: 20px;
             border-radius: 0 5px 5px 0;
         }
+        
+        /* Welcome message */
+        .welcome-message {
+            background: linear-gradient(135deg, #667eea 0%, #FF0095 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Sistem Manajemen Karyawan</h2>
+        <!-- HEADER dengan informasi user dan tombol logout -->
+        <div class="header">
+            <h2>Sistem Manajemen Karyawan</h2>
+            <div class="user-info">
+                <span>Halo, <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>!</span>
+                <a href="logout.php" class="btn-logout" onclick="return confirm('Yakin ingin logout?')">🚪 Logout</a>
+            </div>
+        </div>
+
+        <!-- Welcome message -->
+        <div class="welcome-message">
+            <strong>👋 Selamat datang kembali!</strong> Anda login sebagai <?php echo htmlspecialchars($_SESSION['username']); ?>
+        </div>
 
         <!-- Tampilkan notifikasi jika ada -->
         <?php if (isset($_GET['status']) && $_GET['status'] == 'success'): ?>
